@@ -11,6 +11,16 @@ import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import Auth from "./pages/Auth";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import Terms from "./pages/Terms";
+import OrderTracking from "./pages/OrderTracking";
+import Wishlist from "./pages/Wishlist";
+import OrderConfirmation from "./pages/OrderConfirmation";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +45,16 @@ const App = () => {
                 <Route path="/shop" element={<Shop language={language} toggleLanguage={toggleLanguage} />} />
                 <Route path="/product/:id" element={<ProductDetail language={language} toggleLanguage={toggleLanguage} />} />
                 <Route path="/auth" element={<Auth language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/cart" element={<Cart language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/checkout" element={<Checkout language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/about" element={<About language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/contact" element={<Contact language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/faq" element={<FAQ language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/terms" element={<Terms language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/track-order" element={<OrderTracking language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/wishlist" element={<Wishlist language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/order-confirmation" element={<OrderConfirmation language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/admin" element={<Admin language={language} toggleLanguage={toggleLanguage} />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
