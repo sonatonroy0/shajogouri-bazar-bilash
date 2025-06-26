@@ -119,6 +119,16 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ language, toggleLanguage 
     }
   };
 
+  const getStatusText = (status: string) => {
+    const statusKey = status as keyof typeof content[typeof language]['statuses'];
+    return content[language].statuses[statusKey] || status;
+  };
+
+  const getTimelineText = (status: string) => {
+    const timelineKey = status as keyof typeof content[typeof language]['timeline'];
+    return content[language].timeline[timelineKey] || status;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header language={language} toggleLanguage={toggleLanguage} />
@@ -187,7 +197,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ language, toggleLanguage 
                     <div>
                       <h4 className="font-semibold mb-2">{content[language].status}</h4>
                       <Badge variant="secondary" className="text-sm">
-                        {content[language].statuses[orderData.status as keyof typeof content[typeof language].statuses]}
+                        {getStatusText(orderData.status)}
                       </Badge>
                     </div>
                     <div>
@@ -207,10 +217,10 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ language, toggleLanguage 
                         {getStatusIcon(step.status, step.completed)}
                         <div className="flex-1">
                           <p className={`font-medium ${step.completed ? 'text-gray-900' : 'text-gray-500'}`}>
-                            {content[language].statuses[step.status as keyof typeof content[typeof language].statuses]}
+                            {getStatusText(step.status)}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {content[language].timeline[step.status as keyof typeof content[typeof language].timeline]}
+                            {getTimelineText(step.status)}
                           </p>
                         </div>
                         <span className="text-sm text-gray-500">{step.date}</span>
