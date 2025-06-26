@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Categories from '@/components/Categories';
@@ -8,13 +8,12 @@ import Testimonials from '@/components/Testimonials';
 import Newsletter from '@/components/Newsletter';
 import Footer from '@/components/Footer';
 
-const Index = () => {
-  const [language, setLanguage] = useState<'en' | 'bn'>('en');
+interface IndexProps {
+  language: 'en' | 'bn';
+  toggleLanguage: () => void;
+}
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'bn' : 'en');
-  };
-
+const Index: React.FC<IndexProps> = ({ language, toggleLanguage }) => {
   return (
     <div className="min-h-screen bg-white">
       <Header language={language} toggleLanguage={toggleLanguage} />

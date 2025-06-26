@@ -1,21 +1,12 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Heart, ShoppingBag, Star, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  rating: number;
-  reviews: number;
-  isNew?: boolean;
-  isSale?: boolean;
-  category: string;
-}
+import { Product } from '@/data/products';
+import { useCart } from '@/contexts/CartContext';
+import { toast } from '@/hooks/use-toast';
 
 interface ProductCardProps {
   product: Product;
@@ -23,6 +14,8 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
+  const navigate = useNavigate();
+  const { addItem } = useCart();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -34,17 +27,42 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
     en: {
       addToCart: 'Add to Cart',
       quickView: 'Quick View',
-      reviews: 'reviews'
+      reviews: 'reviews',
+      addedToCart: 'Added to Cart!',
+      addedMessage: `${product.name} added to your cart`
     },
     bn: {
       addToCart: 'কার্টে যোগ করুন',
       quickView: 'দ্রুত দেখুন',
-      reviews: 'রিভিউ'
+      reviews: 'রিভিউ',
+      addedToCart: 'কার্টে যোগ করা হয়েছে!',
+      addedMessage: `${product.namebn} আপনার কার্টে যোগ করা হয়েছে`
     }
   };
 
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addItem(product);
+    toast({
+      title: content[language].addedToCart,
+      description: content[language].addedMessage,
+    });
+  };
+
+  const handleProductClick = () => {
+    navigate(`/product/${product.id}`);
+  };
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/product/${product.id}`);
+  };
+
   return (
-    <div className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-pink-50 hover:border-pink-200">
+    <div 
+      className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-pink-50 hover:border-pink-200 cursor-pointer"
+      onClick={handleProductClick}
+    >
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         {!imageLoaded && (
@@ -81,7 +99,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
           className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-all duration-200 ${
             isWishlisted ? 'text-red-500' : 'text-gray-600'
           }`}
-          onClick={() => setIsWishlisted(!isWishlisted)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsWishlisted(!isWishlisted);
+          }}
         >
           <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
         </Button>
@@ -92,6 +113,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
             <Button
               size="sm"
               className="flex-1 bg-white text-gray-900 hover:bg-gray-100 text-sm"
+              onClick={handleAddToCart}
             >
               <ShoppingBag className="h-4 w-4 mr-2" />
               {content[language].addToCart}
@@ -100,6 +122,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
               variant="outline"
               size="sm"
               className="bg-white/20 backdrop-blur-sm border-white/20 text-white hover:bg-white/30"
+              onClick={handleQuickView}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -128,7 +151,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
         </div>
 
         <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 group-hover:text-pink-600 transition-colors">
-          {product.name}
+          {language === 'en' ? product.name : product.namebn}
         </h3>
 
         <div className="flex items-center gap-2 mb-3">
@@ -143,10 +166,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
         </div>
 
         <Badge variant="secondary" className="text-xs bg-pink-50 text-pink-700 hover:bg-pink-100">
-          {language === 'en' ? product.category : 
-            product.category === 'jewelry' ? 'গহনা' :
-            product.category === 'accessories' ? 'অ্যাক্সেসরিজ' : 
-            'পোশাক'
+          {language === 'en' ? 
+            (product.category === 'jewelry' ? 'Jewelry' :
+             product.category === 'accessories' ? 'Accessories' : 'Clothing') :
+            (product.category === 'jewelry' ? 'গহনা' :
+             product.category === 'accessories' ? 'অ্যাক্সেসরিজ' : 'পোশাক')
           }
         </Badge>
       </div>
