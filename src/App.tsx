@@ -20,6 +20,8 @@ import Terms from "./pages/Terms";
 import OrderTracking from "./pages/OrderTracking";
 import Wishlist from "./pages/Wishlist";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import Account from "./pages/Account";
+import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -54,6 +56,8 @@ const App = () => {
                 <Route path="/track-order" element={<OrderTracking language={language} toggleLanguage={toggleLanguage} />} />
                 <Route path="/wishlist" element={<Wishlist language={language} toggleLanguage={toggleLanguage} />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/account" element={<Account language={language} toggleLanguage={toggleLanguage} />} />
+                <Route path="/orders" element={<Orders language={language} toggleLanguage={toggleLanguage} />} />
                 <Route path="/admin" element={<Admin language={language} toggleLanguage={toggleLanguage} />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

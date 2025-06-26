@@ -1,106 +1,100 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export interface User {
+interface User {
   id: string;
-  email: string;
   name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  area?: string;
   isAdmin: boolean;
 }
 
-interface AuthState {
+interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<{
-  user: User | null;
-  isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
-} | null>(null);
+  updateProfile: (profile: Partial<User>) => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AuthState>({ user: null, isLoading: true });
+  const [user, setUser] = useState<User | null>(null);
 
-  // Check for saved user on mount
   useEffect(() => {
+    // Check for existing session
     const savedUser = localStorage.getItem('shajogouri-user');
     if (savedUser) {
       try {
-        const user = JSON.parse(savedUser);
-        setState({ user, isLoading: false });
+        setUser(JSON.parse(savedUser));
       } catch (error) {
-        console.error('Error loading user from localStorage:', error);
-        setState({ user: null, isLoading: false });
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('shajogouri-user');
       }
-    } else {
-      setState({ user: null, isLoading: false });
     }
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check for admin credentials
-      const isAdmin = email === 'sonaton.fl@gmail.com' && password === '01753840087';
-      
-      // For demo purposes, accept any valid email/password combination
-      if (email.includes('@') && password.length >= 6) {
-        const user: User = {
-          id: Math.random().toString(36).substr(2, 9),
-          email,
-          name: email.split('@')[0],
-          isAdmin
-        };
-        
-        setState({ user, isLoading: false });
-        localStorage.setItem('shajogouri-user', JSON.stringify(user));
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
+    // Mock authentication
+    if (email === 'sonaton.fl@gmail.com' && password === '01753840087') {
+      const adminUser: User = {
+        id: '1',
+        name: 'Sonaton Admin',
+        email: 'sonaton.fl@gmail.com',
+        isAdmin: true
+      };
+      setUser(adminUser);
+      localStorage.setItem('shajogouri-user', JSON.stringify(adminUser));
+      return true;
+    } else if (email && password) {
+      // Regular user login
+      const regularUser: User = {
+        id: Date.now().toString(),
+        name: email.split('@')[0],
+        email,
+        isAdmin: false
+      };
+      setUser(regularUser);
+      localStorage.setItem('shajogouri-user', JSON.stringify(regularUser));
+      return true;
     }
+    return false;
   };
 
   const register = async (email: string, password: string, name: string): Promise<boolean> => {
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (email.includes('@') && password.length >= 6 && name.length >= 2) {
-        const user: User = {
-          id: Math.random().toString(36).substr(2, 9),
-          email,
-          name,
-          isAdmin: false
-        };
-        
-        setState({ user, isLoading: false });
-        localStorage.setItem('shajogouri-user', JSON.stringify(user));
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Registration error:', error);
-      return false;
+    if (email && password && name) {
+      const newUser: User = {
+        id: Date.now().toString(),
+        name,
+        email,
+        isAdmin: false
+      };
+      setUser(newUser);
+      localStorage.setItem('shajogouri-user', JSON.stringify(newUser));
+      return true;
+    }
+    return false;
+  };
+
+  const updateProfile = async (profile: Partial<User>): Promise<void> => {
+    if (user) {
+      const updatedUser = { ...user, ...profile };
+      setUser(updatedUser);
+      localStorage.setItem('shajogouri-user', JSON.stringify(updatedUser));
     }
   };
 
   const logout = () => {
-    setState({ user: null, isLoading: false });
+    setUser(null);
     localStorage.removeItem('shajogouri-user');
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
