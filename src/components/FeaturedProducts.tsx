@@ -1,13 +1,15 @@
 
 import React from 'react';
 import ProductCard from './ProductCard';
-import { sampleProducts } from '@/data/products';
+import { useProducts } from '@/contexts/ProductContext';
 
 interface FeaturedProductsProps {
   language: 'en' | 'bn';
 }
 
 const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ language }) => {
+  const { featuredProducts } = useProducts();
+
   const content = {
     en: {
       title: 'Featured Products',
@@ -21,8 +23,22 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ language }) => {
     }
   };
 
-  // Show first 4 products as featured
-  const featuredProducts = sampleProducts.slice(0, 4);
+  if (featuredProducts.length === 0) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-4">
+              {content[language].title}
+            </h2>
+            <p className="text-lg text-gray-600">
+              {language === 'en' ? 'No products available at the moment.' : 'এই মুহূর্তে কোনো পণ্য উপলব্ধ নেই।'}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-white">

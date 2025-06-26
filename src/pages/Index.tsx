@@ -7,6 +7,7 @@ import FeaturedProducts from '@/components/FeaturedProducts';
 import Testimonials from '@/components/Testimonials';
 import Newsletter from '@/components/Newsletter';
 import Footer from '@/components/Footer';
+import LiveChat from '@/components/LiveChat';
 
 interface IndexProps {
   language: 'en' | 'bn';
@@ -23,6 +24,7 @@ const Index: React.FC<IndexProps> = ({ language, toggleLanguage }) => {
       <Testimonials language={language} />
       <Newsletter language={language} />
       <Footer language={language} />
+      <LiveChat language={language} />
     </div>
   );
 };

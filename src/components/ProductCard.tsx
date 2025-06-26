@@ -42,6 +42,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!product.inStock) {
+      toast({
+        title: language === 'en' ? 'Out of Stock' : 'স্টকে নেই',
+        description: language === 'en' ? 'This product is currently out of stock' : 'এই পণ্যটি বর্তমানে স্টকে নেই',
+        variant: 'destructive'
+      });
+      return;
+    }
     addItem(product);
     toast({
       title: content[language].addedToCart,
@@ -90,6 +98,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
               {language === 'en' ? 'Sale' : 'অফার'}
             </Badge>
           )}
+          {!product.inStock && (
+            <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs px-2 py-1">
+              {language === 'en' ? 'Out of Stock' : 'স্টকে নেই'}
+            </Badge>
+          )}
         </div>
 
         {/* Wishlist Button */}
@@ -112,8 +125,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
           <div className="flex gap-2">
             <Button
               size="sm"
-              className="flex-1 bg-white text-gray-900 hover:bg-gray-100 text-sm"
+              className={`flex-1 text-sm ${
+                product.inStock 
+                  ? 'bg-white text-gray-900 hover:bg-gray-100' 
+                  : 'bg-gray-500 text-white cursor-not-allowed'
+              }`}
               onClick={handleAddToCart}
+              disabled={!product.inStock}
             >
               <ShoppingBag className="h-4 w-4 mr-2" />
               {content[language].addToCart}
@@ -165,14 +183,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, language }) => {
           )}
         </div>
 
-        <Badge variant="secondary" className="text-xs bg-pink-50 text-pink-700 hover:bg-pink-100">
-          {language === 'en' ? 
-            (product.category === 'jewelry' ? 'Jewelry' :
-             product.category === 'accessories' ? 'Accessories' : 'Clothing') :
-            (product.category === 'jewelry' ? 'গহনা' :
-             product.category === 'accessories' ? 'অ্যাক্সেসরিজ' : 'পোশাক')
-          }
-        </Badge>
+        <div className="flex justify-between items-center">
+          <Badge variant="secondary" className="text-xs bg-pink-50 text-pink-700 hover:bg-pink-100">
+            {language === 'en' ? 
+              (product.category === 'jewelry' ? 'Jewelry' :
+               product.category === 'accessories' ? 'Accessories' : 'Clothing') :
+              (product.category === 'jewelry' ? 'গহনা' :
+               product.category === 'accessories' ? 'অ্যাক্সেসরিজ' : 'পোশাক')
+            }
+          </Badge>
+          {product.stockCount <= 5 && product.inStock && (
+            <span className="text-xs text-orange-600 font-medium">
+              {language === 'en' ? `Only ${product.stockCount} left` : `মাত্র ${product.stockCount}টি বাকি`}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
