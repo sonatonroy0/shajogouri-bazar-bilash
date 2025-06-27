@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,7 +95,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
   };
 
   const todaySales = orders
-    .filter(order => new Date(order.orderDate).toDateString() === new Date().toDateString())
+    .filter(order => new Date(order.order_date).toDateString() === new Date().toDateString())
     .reduce((sum, order) => sum + order.total, 0);
 
   const handleSaveSettings = () => {
@@ -176,7 +175,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
               <div key={order.id} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg">
                 <div className="flex-1">
                   <p className="font-medium">#{order.id}</p>
-                  <p className="text-sm text-gray-600">{order.customerName} - {order.items.length} items</p>
+                  <p className="text-sm text-gray-600">{order.customer_name} - {order.items.length} items</p>
                 </div>
                 <div className="text-right">
                   <p className="font-medium">৳{order.total.toLocaleString()}</p>

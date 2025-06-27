@@ -150,12 +150,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ language, toggleLanguage 
           <div className="space-y-6">
             {/* Badges */}
             <div className="flex gap-2">
-              {product.isNew && (
+              {product.is_new && (
                 <Badge className="bg-green-500 hover:bg-green-600">
                   {language === 'en' ? 'New' : 'নতুন'}
                 </Badge>
               )}
-              {product.isSale && (
+              {product.is_sale && (
                 <Badge className="bg-red-500 hover:bg-red-600">
                   {language === 'en' ? 'Sale' : 'অফার'}
                 </Badge>
@@ -173,7 +173,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ language, toggleLanguage 
                     <Star
                       key={i}
                       className={`h-4 w-4 ${
-                        i < Math.floor(product.rating)
+                        i < Math.floor(product.rating || 4.5)
                           ? 'text-yellow-400 fill-current'
                           : 'text-gray-300'
                       }`}
@@ -181,7 +181,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ language, toggleLanguage 
                   ))}
                 </div>
                 <span className="text-sm text-gray-500">
-                  {product.rating} ({product.reviews} {content[language].reviews})
+                  {product.rating || 4.5} ({product.reviews || 0} {content[language].reviews})
                 </span>
               </div>
             </div>
@@ -191,22 +191,22 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ language, toggleLanguage 
               <span className="text-3xl font-bold text-gray-900">
                 {formatPrice(product.price)}
               </span>
-              {product.originalPrice && (
+              {product.original_price && (
                 <span className="text-xl text-gray-500 line-through">
-                  {formatPrice(product.originalPrice)}
+                  {formatPrice(product.original_price)}
                 </span>
               )}
             </div>
 
             {/* Stock Status */}
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className={`font-medium ${product.inStock ? 'text-green-700' : 'text-red-700'}`}>
-                {product.inStock ? content[language].inStock : content[language].outOfStock}
+              <div className={`w-3 h-3 rounded-full ${product.in_stock ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className={`font-medium ${product.in_stock ? 'text-green-700' : 'text-red-700'}`}>
+                {product.in_stock ? content[language].inStock : content[language].outOfStock}
               </span>
-              {product.inStock && product.stockCount <= 10 && (
+              {product.in_stock && (product.stock_count || 0) <= 10 && (
                 <span className="text-orange-600 text-sm">
-                  ({product.stockCount} {content[language].stockLeft})
+                  ({product.stock_count || 0} {content[language].stockLeft})
                 </span>
               )}
             </div>
@@ -236,8 +236,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ language, toggleLanguage 
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setQuantity(Math.min(product.stockCount, quantity + 1))}
-                    disabled={quantity >= product.stockCount}
+                    onClick={() => setQuantity(Math.min(product.stock_count || 10, quantity + 1))}
+                    disabled={quantity >= (product.stock_count || 10)}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -247,7 +247,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ language, toggleLanguage 
               <div className="flex gap-4">
                 <Button
                   onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  disabled={!product.in_stock}
                   className="flex-1 bg-pink-600 hover:bg-pink-700"
                 >
                   <ShoppingBag className="h-4 w-4 mr-2" />
@@ -255,7 +255,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ language, toggleLanguage 
                 </Button>
                 <Button
                   onClick={handleBuyNow}
-                  disabled={!product.inStock}
+                  disabled={!product.in_stock}
                   variant="outline"
                   className="flex-1"
                 >

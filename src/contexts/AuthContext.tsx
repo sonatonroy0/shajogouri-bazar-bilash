@@ -1,100 +1,70 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  area?: string;
-  isAdmin: boolean;
-}
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, name: string) => Promise<boolean>;
-  logout: () => void;
-  updateProfile: (profile: Partial<User>) => Promise<void>;
+  user: (User & { isAdmin?: boolean }) | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<(User & { isAdmin?: boolean }) | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('shajogouri-user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('shajogouri-user');
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        checkUserProfile(session.user);
+      } else {
+        setUser(null);
+        setLoading(false);
       }
-    }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        checkUserProfile(session.user);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication
-    if (email === 'sonaton.fl@gmail.com' && password === '01753840087') {
-      const adminUser: User = {
-        id: '1',
-        name: 'Sonaton Admin',
-        email: 'sonaton.fl@gmail.com',
-        isAdmin: true
-      };
-      setUser(adminUser);
-      localStorage.setItem('shajogouri-user', JSON.stringify(adminUser));
-      return true;
-    } else if (email && password) {
-      // Regular user login
-      const regularUser: User = {
-        id: Date.now().toString(),
-        name: email.split('@')[0],
-        email,
-        isAdmin: false
-      };
-      setUser(regularUser);
-      localStorage.setItem('shajogouri-user', JSON.stringify(regularUser));
-      return true;
-    }
-    return false;
-  };
+  const checkUserProfile = async (authUser: User) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', authUser.id)
+        .single();
 
-  const register = async (email: string, password: string, name: string): Promise<boolean> => {
-    if (email && password && name) {
-      const newUser: User = {
-        id: Date.now().toString(),
-        name,
-        email,
-        isAdmin: false
-      };
-      setUser(newUser);
-      localStorage.setItem('shajogouri-user', JSON.stringify(newUser));
-      return true;
-    }
-    return false;
-  };
-
-  const updateProfile = async (profile: Partial<User>): Promise<void> => {
-    if (user) {
-      const updatedUser = { ...user, ...profile };
-      setUser(updatedUser);
-      localStorage.setItem('shajogouri-user', JSON.stringify(updatedUser));
+      setUser({
+        ...authUser,
+        isAdmin: profile?.is_admin || false
+      });
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setUser(authUser);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('shajogouri-user');
+  const signOut = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

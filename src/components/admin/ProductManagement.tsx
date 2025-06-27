@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, X } from 'lucide-react';
 import { useProducts } from '@/contexts/ProductContext';
-import { Product } from '@/data/products';
 import { toast } from '@/hooks/use-toast';
 import ImageUpload from './ImageUpload';
 
@@ -20,20 +19,20 @@ interface ProductManagementProps {
 const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const [showAddProduct, setShowAddProduct] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>(['']);
 
   const [formData, setFormData] = useState({
     name: '',
     namebn: '',
     price: 0,
-    originalPrice: 0,
+    original_price: 0,
     category: 'jewelry',
     description: '',
     descriptionbn: '',
-    stockCount: 0,
-    isNew: false,
-    isSale: false
+    stock_count: 0,
+    is_new: false,
+    is_sale: false
   });
 
   const content = {
@@ -98,32 +97,32 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       name: '',
       namebn: '',
       price: 0,
-      originalPrice: 0,
+      original_price: 0,
       category: 'jewelry',
       description: '',
       descriptionbn: '',
-      stockCount: 0,
-      isNew: false,
-      isSale: false
+      stock_count: 0,
+      is_new: false,
+      is_sale: false
     });
     setProductImages(['']);
     setEditingProduct(null);
     setShowAddProduct(false);
   };
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = (product: any) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
       namebn: product.namebn,
       price: product.price,
-      originalPrice: product.originalPrice || 0,
+      original_price: product.original_price || 0,
       category: product.category,
       description: product.description,
       descriptionbn: product.descriptionbn,
-      stockCount: product.stockCount,
-      isNew: product.isNew || false,
-      isSale: product.isSale || false
+      stock_count: product.stock_count,
+      is_new: product.is_new || false,
+      is_sale: product.is_sale || false
     });
     setProductImages(product.images.length > 0 ? product.images : ['']);
     setShowAddProduct(true);
@@ -153,7 +152,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       ...formData,
       image: validImages[0],
       images: validImages,
-      inStock: formData.stockCount > 0
+      in_stock: formData.stock_count > 0
     };
 
     if (editingProduct) {
@@ -249,8 +248,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
                 <Label>{content[language].originalPrice}</Label>
                 <Input
                   type="number"
-                  value={formData.originalPrice}
-                  onChange={(e) => setFormData(prev => ({ ...prev, originalPrice: Number(e.target.value) }))}
+                  value={formData.original_price}
+                  onChange={(e) => setFormData(prev => ({ ...prev, original_price: Number(e.target.value) }))}
                   placeholder="0"
                 />
               </div>
@@ -271,8 +270,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
                 <Label>{content[language].stock}</Label>
                 <Input
                   type="number"
-                  value={formData.stockCount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stockCount: Number(e.target.value) }))}
+                  value={formData.stock_count}
+                  onChange={(e) => setFormData(prev => ({ ...prev, stock_count: Number(e.target.value) }))}
                   placeholder="0"
                 />
               </div>
@@ -334,16 +333,16 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={formData.isNew}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isNew: e.target.checked }))}
+                  checked={formData.is_new}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_new: e.target.checked }))}
                 />
                 <span>{content[language].isNew}</span>
               </label>
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={formData.isSale}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isSale: e.target.checked }))}
+                  checked={formData.is_sale}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_sale: e.target.checked }))}
                 />
                 <span>{content[language].isSale}</span>
               </label>
@@ -376,11 +375,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
                   <h4 className="font-medium">{language === 'en' ? product.name : product.namebn}</h4>
                   <p className="text-sm text-gray-600">৳{product.price.toLocaleString()}</p>
                   <div className="flex gap-2 mt-1">
-                    <Badge variant={product.inStock ? "secondary" : "destructive"}>
-                      {product.inStock ? content[language].inStock : content[language].outOfStock}
+                    <Badge variant={product.in_stock ? "secondary" : "destructive"}>
+                      {product.in_stock ? content[language].inStock : content[language].outOfStock}
                     </Badge>
-                    {product.isNew && <Badge className="bg-green-500">{language === 'en' ? 'New' : 'নতুন'}</Badge>}
-                    {product.isSale && <Badge className="bg-red-500">{language === 'en' ? 'Sale' : 'অফার'}</Badge>}
+                    {product.is_new && <Badge className="bg-green-500">{language === 'en' ? 'New' : 'নতুন'}</Badge>}
+                    {product.is_sale && <Badge className="bg-red-500">{language === 'en' ? 'Sale' : 'অফার'}</Badge>}
                   </div>
                 </div>
                 <div className="flex gap-2">

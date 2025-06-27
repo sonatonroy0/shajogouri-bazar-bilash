@@ -17,7 +17,6 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ language }) => {
   const { orders, updateOrderStatus } = useOrders();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
 
   const content = {
     en: {
@@ -84,8 +83,8 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ language }) => {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customerPhone.includes(searchTerm);
+                         order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.customer_phone.includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -138,18 +137,18 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ language }) => {
             
             <div class="invoice-details">
               <p><strong>Invoice No:</strong> ${order.id}</p>
-              <p><strong>Date:</strong> ${new Date(order.orderDate).toLocaleDateString()}</p>
+              <p><strong>Date:</strong> ${new Date(order.order_date).toLocaleDateString()}</p>
               <p><strong>Status:</strong> ${order.status.toUpperCase()}</p>
             </div>
             
             <div class="customer-details">
               <h3>Customer Details:</h3>
-              <p><strong>Name:</strong> ${order.customerName}</p>
-              <p><strong>Phone:</strong> ${order.customerPhone}</p>
-              <p><strong>Email:</strong> ${order.customerEmail}</p>
-              <p><strong>Address:</strong> ${order.customerAddress}, ${order.city}, ${order.area}</p>
-              <p><strong>Courier:</strong> ${order.courierService}</p>
-              <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+              <p><strong>Name:</strong> ${order.customer_name}</p>
+              <p><strong>Phone:</strong> ${order.customer_phone}</p>
+              <p><strong>Email:</strong> ${order.customer_email}</p>
+              <p><strong>Address:</strong> ${order.customer_address}, ${order.city}, ${order.area}</p>
+              <p><strong>Courier:</strong> ${order.courier_service}</p>
+              <p><strong>Payment Method:</strong> ${order.payment_method}</p>
             </div>
             
             <table class="items-table">
@@ -164,7 +163,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ language }) => {
               <tbody>
                 ${order.items.map((item: any) => `
                   <tr>
-                    <td>${item.productName}</td>
+                    <td>${item.product_name}</td>
                     <td>${item.quantity}</td>
                     <td>৳${item.price.toLocaleString()}</td>
                     <td>৳${(item.price * item.quantity).toLocaleString()}</td>
@@ -198,15 +197,15 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ language }) => {
       ['Order ID', 'Customer Name', 'Phone', 'Email', 'Address', 'Total', 'Status', 'Date', 'Courier', 'Payment Method'],
       ...filteredOrders.map(order => [
         order.id,
-        order.customerName,
-        order.customerPhone,
-        order.customerEmail,
-        `${order.customerAddress}, ${order.city}, ${order.area}`,
+        order.customer_name,
+        order.customer_phone,
+        order.customer_email,
+        `${order.customer_address}, ${order.city}, ${order.area}`,
         order.total,
         order.status,
-        new Date(order.orderDate).toLocaleDateString(),
-        order.courierService,
-        order.paymentMethod
+        new Date(order.order_date).toLocaleDateString(),
+        order.courier_service,
+        order.payment_method
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -292,9 +291,9 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ language }) => {
                       <div>
                         <span className="font-medium">{content[language].customer}:</span>
                         <br />
-                        {order.customerName}
+                        {order.customer_name}
                         <br />
-                        {order.customerPhone}
+                        {order.customer_phone}
                       </div>
                       <div>
                         <span className="font-medium">{content[language].items}:</span>
@@ -311,7 +310,7 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ language }) => {
                       <div>
                         <span className="font-medium">{content[language].date}:</span>
                         <br />
-                        {new Date(order.orderDate).toLocaleDateString()}
+                        {new Date(order.order_date).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
@@ -348,15 +347,15 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ language }) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <p><strong>{content[language].shippingAddress}:</strong></p>
-                      <p>{order.customerAddress}, {order.city}, {order.area}</p>
-                      <p><strong>{content[language].courierService}:</strong> {order.courierService}</p>
-                      <p><strong>{content[language].paymentMethod}:</strong> {order.paymentMethod}</p>
+                      <p>{order.customer_address}, {order.city}, {order.area}</p>
+                      <p><strong>{content[language].courierService}:</strong> {order.courier_service}</p>
+                      <p><strong>{content[language].paymentMethod}:</strong> {order.payment_method}</p>
                     </div>
                     <div>
                       <p><strong>{content[language].orderItems}:</strong></p>
-                      {order.items.map((item, index) => (
-                        <p key={index}>
-                          {item.quantity}x {language === 'en' ? item.productName : item.productNameBn} - ৳{(item.price * item.quantity).toLocaleString()}
+                      {order.items.map((item) => (
+                        <p key={item.id}>
+                          {item.quantity}x {language === 'en' ? item.product_name : item.product_name_bn} - ৳{(item.price * item.quantity).toLocaleString()}
                         </p>
                       ))}
                       {order.notes && (
