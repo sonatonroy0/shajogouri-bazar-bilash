@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   LayoutDashboard, Package, ShoppingCart, Users, Settings, 
@@ -15,7 +14,7 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange, language }) => {
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const content = {
@@ -54,7 +53,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange, lan
   ];
 
   const handleLogout = () => {
-    logout();
+    signOut();
     navigate('/');
   };
 
@@ -62,7 +61,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange, lan
     <div className="bg-white border-r border-gray-200 w-64 min-h-screen flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-900">
+        <h2 className="text-xl font-serif font-bold text-gray-900">
           {language === 'en' ? 'Shajogouri Admin' : 'সাজগৌরী অ্যাডমিন'}
         </h2>
       </div>

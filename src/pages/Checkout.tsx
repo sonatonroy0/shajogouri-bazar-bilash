@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -27,7 +26,7 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
   const { user } = useAuth();
   
   const [formData, setFormData] = useState({
-    customerName: user?.user_metadata?.name || '',
+    customerName: user?.name || '',
     customerPhone: '',
     customerEmail: user?.email || '',
     customerAddress: '',

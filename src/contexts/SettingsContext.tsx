@@ -75,15 +75,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .select('key, value');
 
       if (data) {
-        const settingsMap = data.reduce((acc, item) => ({
+        const settingsMap = data.reduce((acc: any, item) => ({
           ...acc,
           [item.key]: item.value
         }), {});
 
+        const paymentMethods = settingsMap.paymentMethods 
+          ? JSON.parse(settingsMap.paymentMethods) 
+          : defaultSettings.paymentMethods;
+
         setSettings(prev => ({
           ...prev,
           ...settingsMap,
-          paymentMethods: settingsMap.paymentMethods ? JSON.parse(settingsMap.paymentMethods) : prev.paymentMethods
+          paymentMethods
         }));
       }
     } catch (error) {

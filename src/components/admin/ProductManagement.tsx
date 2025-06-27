@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +31,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
     descriptionbn: '',
     stock_count: 0,
     is_new: false,
-    is_sale: false
+    is_sale: false,
+    rating: 4.5,
+    reviews: 0
   });
 
   const content = {
@@ -103,7 +104,9 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       descriptionbn: '',
       stock_count: 0,
       is_new: false,
-      is_sale: false
+      is_sale: false,
+      rating: 4.5,
+      reviews: 0
     });
     setProductImages(['']);
     setEditingProduct(null);
@@ -122,9 +125,11 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       descriptionbn: product.descriptionbn,
       stock_count: product.stock_count,
       is_new: product.is_new || false,
-      is_sale: product.is_sale || false
+      is_sale: product.is_sale || false,
+      rating: product.rating || 4.5,
+      reviews: product.reviews || 0
     });
-    setProductImages(product.images.length > 0 ? product.images : ['']);
+    setProductImages(product.images && product.images.length > 0 ? product.images : ['']);
     setShowAddProduct(true);
   };
 

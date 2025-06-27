@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Search, ShoppingBag, Heart, User, X, LogOut } from 'lucide-react';
@@ -14,8 +13,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
   const navigate = useNavigate();
-  const { state } = useCart();
-  const { user, logout } = useAuth();
+  const { itemCount } = useCart();
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
   };
 
   const handleLogout = () => {
-    logout();
+    signOut();
     navigate('/');
   };
 
@@ -133,9 +132,9 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
             {/* Cart */}
             <Button variant="ghost" size="sm" className="relative" onClick={() => navigate('/cart')}>
               <ShoppingBag className="h-5 w-5" />
-              {state.itemCount > 0 && (
+              {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {state.itemCount}
+                  {itemCount}
                 </span>
               )}
             </Button>
@@ -148,7 +147,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
                 </Button>
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <div className="p-3 border-b border-gray-100">
-                    <p className="font-medium text-sm">{user.name}</p>
+                    <p className="font-medium text-sm">{user.name || user.email}</p>
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                   <div className="py-2">

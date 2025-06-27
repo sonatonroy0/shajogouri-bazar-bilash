@@ -3,16 +3,29 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
+interface UserProfile {
+  id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  isAdmin?: boolean;
+}
+
 interface AuthContextType {
-  user: (User & { isAdmin?: boolean }) | null;
+  user: (User & UserProfile) | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<(User & { isAdmin?: boolean }) | null>(null);
+  const [user, setUser] = useState<(User & UserProfile) | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,17 +56,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('*')
         .eq('id', authUser.id)
         .single();
 
       setUser({
         ...authUser,
+        id: authUser.id,
+        name: profile?.name || authUser.user_metadata?.name,
+        email: profile?.email || authUser.email,
+        phone: profile?.phone,
+        address: profile?.address,
+        city: profile?.city,
         isAdmin: profile?.is_admin || false
       });
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      setUser(authUser);
+      setUser({
+        ...authUser,
+        id: authUser.id,
+        name: authUser.user_metadata?.name,
+        email: authUser.email,
+        isAdmin: false
+      });
     } finally {
       setLoading(false);
     }
@@ -63,8 +88,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string, name: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name
+        },
+        emailRedirectTo: `${window.location.origin}/`
+      }
+    });
+    return { error };
+  };
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!user) return;
+    
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+        ...updates
+      });
+
+    if (!error) {
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      signOut, 
+      signIn, 
+      signUp, 
+      updateProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );
