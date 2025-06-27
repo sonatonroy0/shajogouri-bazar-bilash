@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, ShoppingBag, Star, Minus, Plus, ArrowLeft, Truck, Shield, RefreshCw } from 'lucide-react';
-import { sampleProducts } from '@/data/products';
+import { useProducts } from '@/contexts/ProductContext';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
 
@@ -19,24 +19,29 @@ interface ProductDetailProps {
 const ProductDetail: React.FC<ProductDetailProps> = ({ language, toggleLanguage }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { getProduct } = useProducts();
   const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  const product = sampleProducts.find(p => p.id === id);
+  const product = getProduct(id || '');
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            {language === 'en' ? 'Product not found' : 'পণ্য পাওয়া যায়নি'}
-          </h1>
-          <Button onClick={() => navigate('/shop')}>
-            {language === 'en' ? 'Back to Shop' : 'শপে ফিরে যান'}
-          </Button>
+      <div className="min-h-screen bg-white">
+        <Header language={language} toggleLanguage={toggleLanguage} />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              {language === 'en' ? 'Product not found' : 'পণ্য পাওয়া যায়নি'}
+            </h1>
+            <Button onClick={() => navigate('/shop')}>
+              {language === 'en' ? 'Back to Shop' : 'শপে ফিরে যান'}
+            </Button>
+          </div>
         </div>
+        <Footer language={language} />
       </div>
     );
   }

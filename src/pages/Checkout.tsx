@@ -8,7 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCart } from '@/contexts/CartContext';
+import { useOrders } from '@/contexts/OrderContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { courierServices } from '@/utils/courierServices';
 import { toast } from '@/hooks/use-toast';
 
 interface CheckoutProps {
@@ -19,11 +23,14 @@ interface CheckoutProps {
 const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
   const navigate = useNavigate();
   const { state, clearCart } = useCart();
+  const { addOrder } = useOrders();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [courierService, setCourierService] = useState('pathao');
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    name: user?.name || '',
+    email: user?.email || '',
     phone: '',
     address: '',
     city: '',
@@ -36,6 +43,7 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
       title: 'Checkout',
       shippingInfo: 'Shipping Information',
       paymentMethod: 'Payment Method',
+      courierService: 'Courier Service',
       orderSummary: 'Order Summary',
       name: 'Full Name',
       email: 'Email Address',
@@ -51,7 +59,6 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
       placeOrder: 'Place Order',
       subtotal: 'Subtotal',
       delivery: 'Delivery',
-      free: 'Free',
       total: 'Total',
       orderSuccess: 'Order placed successfully!',
       orderSuccessDesc: 'We will contact you soon to confirm your order.',
@@ -60,6 +67,7 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
       title: 'চেকআউট',
       shippingInfo: 'ডেলিভারির তথ্য',
       paymentMethod: 'পেমেন্ট পদ্ধতি',
+      courierService: 'কুরিয়ার সার্ভিস',
       orderSummary: 'অর্ডার সারাংশ',
       name: 'পূর্ণ নাম',
       email: 'ইমেইল ঠিকানা',
@@ -75,12 +83,14 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
       placeOrder: 'অর্ডার করুন',
       subtotal: 'সাবটোটাল',
       delivery: 'ডেলিভারি',
-      free: 'ফ্রি',
       total: 'মোট',
       orderSuccess: 'অর্ডার সফলভাবে সম্পন্ন হয়েছে!',
       orderSuccessDesc: 'আমরা শীঘ্রই আপনার অর্ডার নিশ্চিত করতে যোগাযোগ করব।',
     }
   };
+
+  const selectedCourier = courierServices.find(c => c.id === courierService);
+  const deliveryCharge = selectedCourier?.cost || 0;
 
   const formatPrice = (price: number) => {
     return language === 'en' ? `৳${price.toLocaleString()}` : `৳${price.toLocaleString('bn-BD')}`;
@@ -95,18 +105,63 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name || !formData.phone || !formData.address || !formData.city) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setLoading(true);
 
-    // Simulate order processing
-    setTimeout(() => {
+    try {
+      // Create order
+      const orderData = {
+        userId: user?.id,
+        customerName: formData.name,
+        customerPhone: formData.phone,
+        customerEmail: formData.email,
+        customerAddress: formData.address,
+        city: formData.city,
+        area: formData.area,
+        courierService: selectedCourier?.name || 'Pathao Courier',
+        paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery' : 
+                      paymentMethod === 'bkash' ? 'bKash' : 
+                      paymentMethod === 'nagad' ? 'Nagad' : 'Card',
+        items: state.items.map(item => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          productNameBn: item.product.namebn,
+          quantity: item.quantity,
+          price: item.product.price,
+          image: item.product.image
+        })),
+        subtotal: state.total,
+        total: state.total + deliveryCharge,
+        notes: formData.notes
+      };
+
+      addOrder(orderData);
+      
       toast({
         title: content[language].orderSuccess,
         description: content[language].orderSuccessDesc,
       });
+      
       clearCart();
       navigate('/order-confirmation');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to place order. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   if (state.items.length === 0) {
@@ -133,7 +188,7 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="name">{content[language].name}</Label>
+                      <Label htmlFor="name">{content[language].name} *</Label>
                       <Input
                         id="name"
                         name="name"
@@ -143,7 +198,7 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">{content[language].phone}</Label>
+                      <Label htmlFor="phone">{content[language].phone} *</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -162,12 +217,11 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      required
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="address">{content[language].address}</Label>
+                    <Label htmlFor="address">{content[language].address} *</Label>
                     <Input
                       id="address"
                       name="address"
@@ -179,7 +233,7 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="city">{content[language].city}</Label>
+                      <Label htmlFor="city">{content[language].city} *</Label>
                       <Input
                         id="city"
                         name="city"
@@ -195,7 +249,6 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
                         name="area"
                         value={formData.area}
                         onChange={handleInputChange}
-                        required
                       />
                     </div>
                   </div>
@@ -209,6 +262,27 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
                       onChange={handleInputChange}
                     />
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Courier Service */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>{content[language].courierService}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={courierService} onValueChange={setCourierService}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {courierServices.map(courier => (
+                        <SelectItem key={courier.id} value={courier.id}>
+                          {language === 'en' ? courier.name : courier.nameBn} - ৳{courier.cost}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </CardContent>
               </Card>
 
@@ -271,11 +345,11 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
                       </div>
                       <div className="flex justify-between">
                         <span>{content[language].delivery}</span>
-                        <span className="text-green-600">{content[language].free}</span>
+                        <span>{formatPrice(deliveryCharge)}</span>
                       </div>
                       <div className="flex justify-between font-bold text-lg">
                         <span>{content[language].total}</span>
-                        <span>{formatPrice(state.total)}</span>
+                        <span>{formatPrice(state.total + deliveryCharge)}</span>
                       </div>
                     </div>
                     

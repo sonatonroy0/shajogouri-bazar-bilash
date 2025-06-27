@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import ProductManagement from '@/components/admin/ProductManagement';
+import OrderManagement from '@/components/admin/OrderManagement';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,9 @@ import {
 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useProducts } from '@/contexts/ProductContext';
+import { useOrders } from '@/contexts/OrderContext';
 import { toast } from '@/hooks/use-toast';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 interface AdminProps {
   language: 'en' | 'bn';
@@ -29,6 +32,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
   const { user } = useAuth();
   const { settings, updateSettings } = useSettings();
   const { products } = useProducts();
+  const { orders } = useOrders();
   const [activeTab, setActiveTab] = useState('overview');
 
   // Redirect if not admin
@@ -45,11 +49,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
       totalOrders: 'Total Orders',
       totalUsers: 'Total Users',
       todaySales: 'Today\'s Sales',
-      stats: {
-        orders: '156',
-        users: '1,234',
-        sales: '৳15,000'
-      },
+      recentOrders: 'Recent Orders',
       bannerSettings: 'Banner Settings',
       heroImage: 'Hero Image URL',
       heroTitle: 'Hero Title',
@@ -74,13 +74,9 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
       totalOrders: 'মোট অর্ডার',
       totalUsers: 'মোট ব্যবহারকারী',
       todaySales: 'আজকের বিক্রয়',
-      stats: {
-        orders: '১৫৬',
-        users: '১,২৩৪',
-        sales: '৳১৫,০০০'
-      },
+      recentOrders: 'সাম্প্রতিক অর্ডার',
       bannerSettings: 'ব্যানার সেটিংস',
-      heroImage: 'হিরো ইমেজ URL',
+      heroImage: 'হিরো ইমেজ',
       heroTitle: 'হিরো শিরোনাম',
       heroSubtitle: 'হিরো সাবটাইটেল',
       updateBanner: 'ব্যানার আপডেট করুন',
@@ -98,6 +94,10 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
       saveSettings: 'সেটিংস সেভ করুন'
     }
   };
+
+  const todaySales = orders
+    .filter(order => new Date(order.orderDate).toDateString() === new Date().toDateString())
+    .reduce((sum, order) => sum + order.total, 0);
 
   const handleSaveSettings = () => {
     toast({
@@ -134,7 +134,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
               <ShoppingCart className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">{content[language].totalOrders}</p>
-                <p className="text-2xl font-bold text-gray-900">{content[language].stats.orders}</p>
+                <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
               </div>
             </div>
           </CardContent>
@@ -146,7 +146,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
               <Users className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">{content[language].totalUsers}</p>
-                <p className="text-2xl font-bold text-gray-900">{content[language].stats.users}</p>
+                <p className="text-2xl font-bold text-gray-900">0</p>
               </div>
             </div>
           </CardContent>
@@ -158,32 +158,35 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
               <TrendingUp className="h-8 w-8 text-pink-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">{content[language].todaySales}</p>
-                <p className="text-2xl font-bold text-gray-900">{content[language].stats.sales}</p>
+                <p className="text-2xl font-bold text-gray-900">৳{todaySales.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Products */}
+      {/* Recent Orders */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Products</CardTitle>
+          <CardTitle>{content[language].recentOrders}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {products.slice(0, 5).map((product) => (
-              <div key={product.id} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg">
-                <img src={product.image} alt={product.name} className="w-12 h-12 object-cover rounded" />
+            {orders.slice(0, 5).map((order) => (
+              <div key={order.id} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg">
                 <div className="flex-1">
-                  <p className="font-medium">{language === 'en' ? product.name : product.namebn}</p>
-                  <p className="text-sm text-gray-600">৳{product.price.toLocaleString()}</p>
+                  <p className="font-medium">#{order.id}</p>
+                  <p className="text-sm text-gray-600">{order.customerName} - {order.items.length} items</p>
                 </div>
-                <Badge variant={product.inStock ? "secondary" : "destructive"}>
-                  {product.inStock ? 'In Stock' : 'Out of Stock'}
-                </Badge>
+                <div className="text-right">
+                  <p className="font-medium">৳{order.total.toLocaleString()}</p>
+                  <Badge variant="secondary">{order.status}</Badge>
+                </div>
               </div>
             ))}
+            {orders.length === 0 && (
+              <p className="text-gray-500 text-center py-4">No orders yet</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -198,17 +201,11 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
         <CardContent className="p-6 space-y-4">
           <div>
             <Label>{content[language].heroImage}</Label>
-            <div className="flex gap-2">
-              <Input
-                value={settings.heroImage}
-                onChange={(e) => updateSettings({ heroImage: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-              />
-              <Button variant="outline">
-                <Upload className="h-4 w-4 mr-2" />
-                Upload
-              </Button>
-            </div>
+            <ImageUpload
+              value={settings.heroImage}
+              onChange={(url) => updateSettings({ heroImage: url })}
+              label="Hero Banner Image"
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -408,6 +405,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
     switch (activeTab) {
       case 'overview': return renderOverview();
       case 'products': return <ProductManagement language={language} />;
+      case 'orders': return <OrderManagement language={language} />;
       case 'banners': return renderBanners();
       case 'settings': return renderSettings();
       default: return renderOverview();
