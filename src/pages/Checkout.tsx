@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/contexts/CartContext';
 import { useOrders } from '@/contexts/OrderContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,138 +22,159 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
   const navigate = useNavigate();
-  const { state, clearCart } = useCart();
+  const { items, getTotalPrice, clearCart } = useCart();
   const { addOrder } = useOrders();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('cod');
-  const [courierService, setCourierService] = useState('pathao');
+  
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: '',
-    address: '',
+    customerName: user?.user_metadata?.name || '',
+    customerPhone: '',
+    customerEmail: user?.email || '',
+    customerAddress: '',
     city: '',
     area: '',
+    courierService: '',
+    paymentMethod: '',
     notes: ''
   });
+  const [loading, setLoading] = useState(false);
 
   const content = {
     en: {
       title: 'Checkout',
-      shippingInfo: 'Shipping Information',
-      paymentMethod: 'Payment Method',
-      courierService: 'Courier Service',
-      orderSummary: 'Order Summary',
-      name: 'Full Name',
-      email: 'Email Address',
+      customerInfo: 'Customer Information',
+      fullName: 'Full Name',
       phone: 'Phone Number',
-      address: 'Street Address',
+      email: 'Email Address',
+      address: 'Full Address',
       city: 'City',
-      area: 'Area/District',
-      notes: 'Order Notes (Optional)',
-      cod: 'Cash on Delivery',
-      bkash: 'bKash',
-      nagad: 'Nagad',
-      card: 'Credit/Debit Card',
-      placeOrder: 'Place Order',
+      area: 'Area',
+      deliveryInfo: 'Delivery Information',
+      courierService: 'Courier Service',
+      selectCourier: 'Select Courier Service',
+      paymentInfo: 'Payment Information',
+      paymentMethod: 'Payment Method',
+      selectPayment: 'Select Payment Method',
+      notes: 'Special Notes (Optional)',
+      orderSummary: 'Order Summary',
       subtotal: 'Subtotal',
-      delivery: 'Delivery',
+      deliveryCharge: 'Delivery Charge',
       total: 'Total',
-      orderSuccess: 'Order placed successfully!',
-      orderSuccessDesc: 'We will contact you soon to confirm your order.',
+      placeOrder: 'Place Order',
+      processing: 'Processing...',
+      required: 'This field is required'
     },
     bn: {
       title: 'চেকআউট',
-      shippingInfo: 'ডেলিভারির তথ্য',
-      paymentMethod: 'পেমেন্ট পদ্ধতি',
-      courierService: 'কুরিয়ার সার্ভিস',
-      orderSummary: 'অর্ডার সারাংশ',
-      name: 'পূর্ণ নাম',
-      email: 'ইমেইল ঠিকানা',
+      customerInfo: 'গ্রাহকের তথ্য',
+      fullName: 'পূর্ণ নাম',
       phone: 'ফোন নম্বর',
-      address: 'রাস্তার ঠিকানা',
+      email: 'ইমেইল ঠিকানা',
+      address: 'সম্পূর্ণ ঠিকানা',
       city: 'শহর',
-      area: 'এলাকা/জেলা',
-      notes: 'অর্ডার নোট (ঐচ্ছিক)',
-      cod: 'ক্যাশ অন ডেলিভারি',
-      bkash: 'বিকাশ',
-      nagad: 'নগদ',
-      card: 'ক্রেডিট/ডেবিট কার্ড',
-      placeOrder: 'অর্ডার করুন',
-      subtotal: 'সাবটোটাল',
-      delivery: 'ডেলিভারি',
+      area: 'এলাকা',
+      deliveryInfo: 'ডেলিভারি তথ্য',
+      courierService: 'কুরিয়ার সার্ভিস',
+      selectCourier: 'কুরিয়ার সার্ভিস নির্বাচন করুন',
+      paymentInfo: 'পেমেন্ট তথ্য',
+      paymentMethod: 'পেমেন্ট পদ্ধতি',
+      selectPayment: 'পেমেন্ট পদ্ধতি নির্বাচন করুন',
+      notes: 'বিশেষ নোট (ঐচ্ছিক)',
+      orderSummary: 'অর্ডার সংক্ষেপ',
+      subtotal: 'উপমোট',
+      deliveryCharge: 'ডেলিভারি চার্জ',
       total: 'মোট',
-      orderSuccess: 'অর্ডার সফলভাবে সম্পন্ন হয়েছে!',
-      orderSuccessDesc: 'আমরা শীঘ্রই আপনার অর্ডার নিশ্চিত করতে যোগাযোগ করব।',
+      placeOrder: 'অর্ডার করুন',
+      processing: 'প্রক্রিয়াকরণ...',
+      required: 'এই ক্ষেত্রটি প্রয়োজনীয়'
     }
   };
 
-  const selectedCourier = courierServices.find(c => c.id === courierService);
-  const deliveryCharge = selectedCourier?.cost || 0;
+  const paymentMethods = [
+    { id: 'bkash', name: 'bKash', nameBn: 'বিকাশ' },
+    { id: 'nagad', name: 'Nagad', nameBn: 'নগদ' },
+    { id: 'rocket', name: 'Rocket', nameBn: 'রকেট' },
+    { id: 'cod', name: 'Cash on Delivery', nameBn: 'ক্যাশ অন ডেলিভারি' }
+  ];
 
   const formatPrice = (price: number) => {
     return language === 'en' ? `৳${price.toLocaleString()}` : `৳${price.toLocaleString('bn-BD')}`;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+  const selectedCourier = courierServices.find(c => c.id === formData.courierService);
+  const deliveryCharge = selectedCourier?.cost || 0;
+  const subtotal = getTotalPrice();
+  const total = subtotal + deliveryCharge;
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.phone || !formData.address || !formData.city) {
+  const validateForm = () => {
+    const required = ['customerName', 'customerPhone', 'customerAddress', 'city', 'courierService', 'paymentMethod'];
+    for (const field of required) {
+      if (!formData[field as keyof typeof formData]) {
+        toast({
+          title: 'Error',
+          description: `${field} is required`,
+          variant: 'destructive'
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!validateForm()) return;
+    if (items.length === 0) {
       toast({
         title: 'Error',
-        description: 'Please fill in all required fields',
+        description: 'Your cart is empty',
         variant: 'destructive'
       });
       return;
     }
 
     setLoading(true);
-
     try {
-      // Create order
-      const orderData = {
-        userId: user?.id,
-        customerName: formData.name,
-        customerPhone: formData.phone,
-        customerEmail: formData.email,
-        customerAddress: formData.address,
+      const orderItems = items.map(item => ({
+        product_id: item.id,
+        product_name: item.name,
+        product_name_bn: item.namebn,
+        quantity: item.quantity,
+        price: item.price,
+        image: item.image
+      }));
+
+      const orderId = await addOrder({
+        customer_name: formData.customerName,
+        customer_phone: formData.customerPhone,
+        customer_email: formData.customerEmail,
+        customer_address: formData.customerAddress,
         city: formData.city,
         area: formData.area,
-        courierService: selectedCourier?.name || 'Pathao Courier',
-        paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery' : 
-                      paymentMethod === 'bkash' ? 'bKash' : 
-                      paymentMethod === 'nagad' ? 'Nagad' : 'Card',
-        items: state.items.map(item => ({
-          productId: item.product.id,
-          productName: item.product.name,
-          productNameBn: item.product.namebn,
-          quantity: item.quantity,
-          price: item.product.price,
-          image: item.product.image
-        })),
-        subtotal: state.total,
-        total: state.total + deliveryCharge,
-        notes: formData.notes
-      };
+        courier_service: formData.courierService,
+        payment_method: formData.paymentMethod,
+        subtotal: subtotal,
+        total: total,
+        status: 'pending',
+        notes: formData.notes,
+        items: orderItems,
+        user_id: user?.id || null
+      });
 
-      addOrder(orderData);
-      
+      clearCart();
       toast({
-        title: content[language].orderSuccess,
-        description: content[language].orderSuccessDesc,
+        title: language === 'en' ? 'Order Placed!' : 'অর্ডার সম্পন্ন!',
+        description: language === 'en' 
+          ? `Your order #${orderId} has been placed successfully`
+          : `আপনার অর্ডার #${orderId} সফলভাবে সম্পন্ন হয়েছে`,
       });
       
-      clearCart();
-      navigate('/order-confirmation');
+      navigate(`/order-confirmation?id=${orderId}`);
     } catch (error) {
+      console.error('Error placing order:', error);
       toast({
         title: 'Error',
         description: 'Failed to place order. Please try again.',
@@ -164,116 +185,101 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
     }
   };
 
-  if (state.items.length === 0) {
-    navigate('/cart');
-    return null;
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header language={language} toggleLanguage={toggleLanguage} />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
+          <Button onClick={() => navigate('/shop')}>Continue Shopping</Button>
+        </div>
+        <Footer language={language} />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Header language={language} toggleLanguage={toggleLanguage} />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">{content[language].title}</h1>
         
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Forms */}
-            <div className="space-y-6">
-              {/* Shipping Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{content[language].shippingInfo}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">{content[language].name} *</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">{content[language].phone} *</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Form Section */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Customer Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{content[language].customerInfo}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="email">{content[language].email}</Label>
+                    <Label>{content[language].fullName} *</Label>
                     <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="address">{content[language].address} *</Label>
-                    <Input
-                      id="address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
+                      value={formData.customerName}
+                      onChange={(e) => handleInputChange('customerName', e.target.value)}
                       required
                     />
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">{content[language].city} *</Label>
-                      <Input
-                        id="city"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="area">{content[language].area}</Label>
-                      <Input
-                        id="area"
-                        name="area"
-                        value={formData.area}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-                  
                   <div>
-                    <Label htmlFor="notes">{content[language].notes}</Label>
+                    <Label>{content[language].phone} *</Label>
                     <Input
-                      id="notes"
-                      name="notes"
-                      value={formData.notes}
-                      onChange={handleInputChange}
+                      type="tel"
+                      value={formData.customerPhone}
+                      onChange={(e) => handleInputChange('customerPhone', e.target.value)}
+                      required
                     />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div>
+                  <Label>{content[language].email}</Label>
+                  <Input
+                    type="email"
+                    value={formData.customerEmail}
+                    onChange={(e) => handleInputChange('customerEmail', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>{content[language].address} *</Label>
+                  <Textarea
+                    value={formData.customerAddress}
+                    onChange={(e) => handleInputChange('customerAddress', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>{content[language].city} *</Label>
+                    <Input
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>{content[language].area}</Label>
+                    <Input
+                      value={formData.area}
+                      onChange={(e) => handleInputChange('area', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Courier Service */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{content[language].courierService}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Select value={courierService} onValueChange={setCourierService}>
+            {/* Delivery Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{content[language].deliveryInfo}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label>{content[language].courierService} *</Label>
+                  <Select value={formData.courierService} onValueChange={(value) => handleInputChange('courierService', value)}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder={content[language].selectCourier} />
                     </SelectTrigger>
                     <SelectContent>
                       {courierServices.map(courier => (
@@ -283,91 +289,89 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
                       ))}
                     </SelectContent>
                   </Select>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Payment Method */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{content[language].paymentMethod}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="cod" id="cod" />
-                      <Label htmlFor="cod">{content[language].cod}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="bkash" id="bkash" />
-                      <Label htmlFor="bkash">{content[language].bkash}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="nagad" id="nagad" />
-                      <Label htmlFor="nagad">{content[language].nagad}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="card" id="card" />
-                      <Label htmlFor="card">{content[language].card}</Label>
-                    </div>
-                  </RadioGroup>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column - Order Summary */}
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{content[language].orderSummary}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {state.items.map((item) => (
-                      <div key={item.id} className="flex justify-between">
-                        <div>
-                          <p className="font-medium">
-                            {language === 'en' ? item.product.name : item.product.namebn}
-                          </p>
-                          <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                        </div>
-                        <p className="font-medium">
-                          {formatPrice(item.product.price * item.quantity)}
-                        </p>
-                      </div>
-                    ))}
-                    
-                    <hr />
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>{content[language].subtotal}</span>
-                        <span>{formatPrice(state.total)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>{content[language].delivery}</span>
-                        <span>{formatPrice(deliveryCharge)}</span>
-                      </div>
-                      <div className="flex justify-between font-bold text-lg">
-                        <span>{content[language].total}</span>
-                        <span>{formatPrice(state.total + deliveryCharge)}</span>
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      disabled={loading}
-                      className="w-full bg-pink-600 hover:bg-pink-700"
-                    >
-                      {loading ? '...' : content[language].placeOrder}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Payment Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{content[language].paymentInfo}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>{content[language].paymentMethod} *</Label>
+                  <Select value={formData.paymentMethod} onValueChange={(value) => handleInputChange('paymentMethod', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={content[language].selectPayment} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentMethods.map(method => (
+                        <SelectItem key={method.id} value={method.id}>
+                          {language === 'en' ? method.name : method.nameBn}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{content[language].notes}</Label>
+                  <Textarea
+                    value={formData.notes}
+                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    placeholder="Any special instructions..."
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </form>
+
+          {/* Order Summary */}
+          <div>
+            <Card className="sticky top-4">
+              <CardHeader>
+                <CardTitle>{content[language].orderSummary}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {items.map(item => (
+                  <div key={item.id} className="flex items-center space-x-3">
+                    <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{language === 'en' ? item.name : item.namebn}</p>
+                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="font-medium">{formatPrice(item.price * item.quantity)}</p>
+                  </div>
+                ))}
+                
+                <div className="border-t pt-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span>{content[language].subtotal}:</span>
+                    <span>{formatPrice(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{content[language].deliveryCharge}:</span>
+                    <span>{formatPrice(deliveryCharge)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg border-t pt-2">
+                    <span>{content[language].total}:</span>
+                    <span>{formatPrice(total)}</span>
+                  </div>
+                </div>
+                
+                <Button
+                  onClick={handlePlaceOrder}
+                  disabled={loading}
+                  className="w-full bg-pink-600 hover:bg-pink-700"
+                >
+                  {loading ? content[language].processing : content[language].placeOrder}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-      
+
       <Footer language={language} />
     </div>
   );
