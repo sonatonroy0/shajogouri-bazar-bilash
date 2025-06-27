@@ -10,6 +10,7 @@ interface UserProfile {
   phone?: string;
   address?: string;
   city?: string;
+  area?: string;
   isAdmin?: boolean;
 }
 
@@ -19,6 +20,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, name: string) => Promise<boolean>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
 
@@ -68,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: profile?.phone,
         address: profile?.address,
         city: profile?.city,
+        area: profile?.area,
         isAdmin: profile?.is_admin || false
       });
     } catch (error) {
@@ -110,6 +114,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
+  const login = async (email: string, password: string): Promise<boolean> => {
+    const { error } = await signIn(email, password);
+    return !error;
+  };
+
+  const register = async (email: string, password: string, name: string): Promise<boolean> => {
+    const { error } = await signUp(email, password, name);
+    return !error;
+  };
+
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) return;
     
@@ -132,6 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signOut, 
       signIn, 
       signUp, 
+      login,
+      register,
       updateProfile 
     }}>
       {children}

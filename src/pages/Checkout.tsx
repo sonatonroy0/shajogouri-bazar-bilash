@@ -143,7 +143,10 @@ const Checkout: React.FC<CheckoutProps> = ({ language, toggleLanguage }) => {
         product_name_bn: item.namebn,
         quantity: item.quantity,
         price: item.price,
-        image: item.image
+        image: item.image,
+        created_at: new Date().toISOString(),
+        id: crypto.randomUUID(),
+        order_id: '' // Will be set by the backend
       }));
 
       const orderId = await addOrder({
