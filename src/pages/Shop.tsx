@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, SlidersHorizontal } from 'lucide-react';
-import { sampleProducts, categories } from '@/data/products';
+import { useProducts } from '@/contexts/ProductContext';
 
 interface ShopProps {
   language: 'en' | 'bn';
@@ -16,6 +16,7 @@ interface ShopProps {
 }
 
 const Shop: React.FC<ShopProps> = ({ language, toggleLanguage }) => {
+  const { products, categories } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name');
@@ -60,8 +61,15 @@ const Shop: React.FC<ShopProps> = ({ language, toggleLanguage }) => {
     }
   };
 
+  const categoryOptions = [
+    { id: 'all', name: 'All Categories', namebn: 'সব ক্যাটেগরি' },
+    { id: 'jewelry', name: '💍 Jewelry', namebn: '💍 গহনা' },
+    { id: 'accessories', name: '👜 Accessories', namebn: '👜 অ্যাক্সেসরিজ' },
+    { id: 'clothing', name: '👗 Clothing', namebn: '👗 পোশাক' }
+  ];
+
   const filteredProducts = useMemo(() => {
-    let filtered = sampleProducts.filter(product => {
+    let filtered = products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            product.namebn.includes(searchTerm);
       const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
@@ -87,7 +95,7 @@ const Shop: React.FC<ShopProps> = ({ language, toggleLanguage }) => {
     });
 
     return filtered;
-  }, [searchTerm, selectedCategory, sortBy, priceRange]);
+  }, [products, searchTerm, selectedCategory, sortBy, priceRange]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -129,12 +137,9 @@ const Shop: React.FC<ShopProps> = ({ language, toggleLanguage }) => {
                   <SelectValue placeholder={content[language].categories} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">
-                    {language === 'en' ? 'All Categories' : 'সব ক্যাটেগরি'}
-                  </SelectItem>
-                  {categories.map(category => (
+                  {categoryOptions.map(category => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.icon} {language === 'en' ? category.name : category.namebn}
+                      {language === 'en' ? category.name : category.namebn}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -160,7 +165,7 @@ const Shop: React.FC<ShopProps> = ({ language, toggleLanguage }) => {
           <div className="flex flex-wrap gap-2 mt-4">
             {selectedCategory !== 'all' && (
               <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedCategory('all')}>
-                {categories.find(c => c.id === selectedCategory)?.[language === 'en' ? 'name' : 'namebn']} ×
+                {categoryOptions.find(c => c.id === selectedCategory)?.[language === 'en' ? 'name' : 'namebn']} ×
               </Badge>
             )}
             {searchTerm && (

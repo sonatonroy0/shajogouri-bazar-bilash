@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Upload, X } from 'lucide-react';
+import { Plus, Edit, Trash2, X } from 'lucide-react';
 import { useProducts } from '@/contexts/ProductContext';
 import { Product } from '@/data/products';
 import { toast } from '@/hooks/use-toast';
+import ImageUpload from './ImageUpload';
 
 interface ProductManagementProps {
   language: 'en' | 'bn';
@@ -20,7 +21,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [imageFiles, setImageFiles] = useState<string[]>(['']);
+  const [productImages, setProductImages] = useState<string[]>(['']);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -57,7 +58,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       delete: 'Delete',
       inStock: 'In Stock',
       outOfStock: 'Out of Stock',
-      addImage: 'Add Image URL',
+      addImage: 'Add Another Image',
       removeImage: 'Remove Image',
       jewelry: 'Jewelry',
       accessories: 'Accessories',
@@ -84,7 +85,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       delete: 'মুছুন',
       inStock: 'স্টকে আছে',
       outOfStock: 'স্টকে নেই',
-      addImage: 'ছবির URL যোগ করুন',
+      addImage: 'আরও ছবি যোগ করুন',
       removeImage: 'ছবি সরান',
       jewelry: 'গহনা',
       accessories: 'অ্যাক্সেসরিজ',
@@ -105,7 +106,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       isNew: false,
       isSale: false
     });
-    setImageFiles(['']);
+    setProductImages(['']);
     setEditingProduct(null);
     setShowAddProduct(false);
   };
@@ -124,7 +125,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       isNew: product.isNew || false,
       isSale: product.isSale || false
     });
-    setImageFiles(product.images.length > 0 ? product.images : ['']);
+    setProductImages(product.images.length > 0 ? product.images : ['']);
     setShowAddProduct(true);
   };
 
@@ -138,7 +139,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
       return;
     }
 
-    const validImages = imageFiles.filter(img => img.trim() !== '');
+    const validImages = productImages.filter(img => img.trim() !== '');
     if (validImages.length === 0) {
       toast({
         title: 'Error',
@@ -182,18 +183,18 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
     }
   };
 
-  const addImageField = () => {
-    setImageFiles([...imageFiles, '']);
+  const addImageSlot = () => {
+    setProductImages([...productImages, '']);
   };
 
-  const removeImageField = (index: number) => {
-    setImageFiles(imageFiles.filter((_, i) => i !== index));
+  const removeImageSlot = (index: number) => {
+    setProductImages(productImages.filter((_, i) => i !== index));
   };
 
-  const updateImageField = (index: number, value: string) => {
-    const newImages = [...imageFiles];
-    newImages[index] = value;
-    setImageFiles(newImages);
+  const updateImageSlot = (index: number, url: string) => {
+    const newImages = [...productImages];
+    newImages[index] = url;
+    setProductImages(newImages);
   };
 
   return (
@@ -217,7 +218,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
               {editingProduct ? content[language].editProduct : content[language].addProduct}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>{content[language].productName}</Label>
@@ -279,21 +280,21 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
 
             {/* Product Images */}
             <div>
-              <Label>{content[language].images}</Label>
-              <div className="space-y-2">
-                {imageFiles.map((image, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
+              <Label className="text-lg font-medium">{content[language].images}</Label>
+              <div className="space-y-4 mt-2">
+                {productImages.map((image, index) => (
+                  <div key={index} className="relative">
+                    <ImageUpload
                       value={image}
-                      onChange={(e) => updateImageField(index, e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                      className="flex-1"
+                      onChange={(url) => updateImageSlot(index, url)}
+                      label={`Image ${index + 1}`}
                     />
-                    {imageFiles.length > 1 && (
+                    {productImages.length > 1 && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => removeImageField(index)}
+                        className="absolute top-0 right-0"
+                        onClick={() => removeImageSlot(index)}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -302,8 +303,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ language }) => {
                 ))}
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={addImageField}
+                  onClick={addImageSlot}
+                  className="w-full"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {content[language].addImage}
