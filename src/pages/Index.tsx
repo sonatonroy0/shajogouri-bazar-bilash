@@ -1,12 +1,9 @@
 
 import React from 'react';
 import Header from '@/components/Header';
-import Hero from '@/components/Hero';
-import Categories from '@/components/Categories';
-import FeaturedProducts from '@/components/FeaturedProducts';
-import Testimonials from '@/components/Testimonials';
-import Newsletter from '@/components/Newsletter';
 import Footer from '@/components/Footer';
+import Hero from '@/components/Hero';
+import FeaturedProducts from '@/components/FeaturedProducts';
 import LiveChat from '@/components/LiveChat';
 
 interface IndexProps {
@@ -19,10 +16,7 @@ const Index: React.FC<IndexProps> = ({ language, toggleLanguage }) => {
     <div className="min-h-screen bg-white">
       <Header language={language} toggleLanguage={toggleLanguage} />
       <Hero language={language} />
-      <Categories language={language} />
       <FeaturedProducts language={language} />
-      <Testimonials language={language} />
-      <Newsletter language={language} />
       <Footer language={language} />
       <LiveChat language={language} />
     </div>

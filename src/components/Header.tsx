@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, Search, ShoppingBag, Heart, User, X, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useCart } from '@/contexts/CartContext';
+import { Badge } from '@/components/ui/badge';
+import { ShoppingBag, User, Menu, X, Globe, LogOut, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 
 interface HeaderProps {
   language: 'en' | 'bn';
@@ -13,233 +14,171 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
   const navigate = useNavigate();
-  const { itemCount } = useCart();
-  const { user, signOut } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { user, logout } = useAuth();
+  const { getTotalItems } = useCart();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navigation = {
-    en: [
-      { name: 'Home', href: '/' },
-      { name: 'Shop', href: '/shop' },
-      { name: 'About', href: '/about' },
-      { name: 'Contact', href: '/contact' },
-      { name: 'FAQ', href: '/faq' },
-    ],
-    bn: [
-      { name: 'হোম', href: '/' },
-      { name: 'শপ', href: '/shop' },
-      { name: 'আমাদের সম্পর্কে', href: '/about' },
-      { name: 'যোগাযোগ', href: '/contact' },
-      { name: 'প্রশ্ন উত্তর', href: '/faq' },
-    ]
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchTerm)}`);
-      setSearchOpen(false);
-      setSearchTerm('');
+  const content = {
+    en: {
+      home: 'Home',
+      shop: 'Shop',
+      cart: 'Cart',
+      orders: 'My Orders',
+      login: 'Login',
+      admin: 'Admin',
+      logout: 'Logout'
+    },
+    bn: {
+      home: 'হোম',
+      shop: 'শপ',
+      cart: 'কার্ট',
+      orders: 'আমার অর্ডার',
+      login: 'লগইন',
+      admin: 'অ্যাডমিন',
+      logout: 'লগআউট'
     }
   };
 
-  const handleNavigation = (href: string) => {
-    navigate(href);
-    setMobileMenuOpen(false);
-  };
-
-  const handleLogout = () => {
-    signOut();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
-  return (
-    <header className="bg-white shadow-sm border-b border-pink-100 sticky top-0 z-50">
-      {/* Top banner */}
-      <div className="bg-gradient-to-r from-pink-50 to-rose-50 text-center py-2 px-4">
-        <p className="text-sm text-rose-800">
-          {language === 'en' 
-            ? '✨ Free shipping on orders over ৳2000 | Use code: WELCOME10' 
-            : '✨ ২০০০ টাকার উপরে অর্ডারে ফ্রি ডেলিভারি | কোড: WELCOME10'}
-        </p>
-      </div>
+  const totalItems = getTotalItems();
 
+  return (
+    <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm" 
-              onClick={() => setMobileMenuOpen(true)}
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </div>
-
           {/* Logo */}
-          <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
-            <h1 className="text-2xl font-serif font-bold bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent">
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">S</span>
+            </div>
+            <span className="text-xl font-serif font-bold text-gray-900">
               Shajogouri
-            </h1>
-            <p className="text-xs text-gray-500 -mt-1">
-              {language === 'en' ? 'Handcrafted Elegance' : 'হাতে তৈরি কারুকাজ'}
-            </p>
-          </div>
+            </span>
+          </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            {navigation[language].map((item) => (
-              <button
-                key={item.name}
-                onClick={() => handleNavigation(item.href)}
-                className="text-gray-700 hover:text-pink-600 transition-colors duration-200 text-sm font-medium"
-              >
-                {item.name}
-              </button>
-            ))}
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link to="/" className="text-gray-700 hover:text-pink-600 transition-colors">
+              {content[language].home}
+            </Link>
+            <Link to="/shop" className="text-gray-700 hover:text-pink-600 transition-colors">
+              {content[language].shop}
+            </Link>
+            {user && (
+              <Link to="/orders" className="text-gray-700 hover:text-pink-600 transition-colors">
+                {content[language].orders}
+              </Link>
+            )}
           </nav>
 
-          {/* Right side actions */}
+          {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Language toggle */}
+            {/* Language Toggle */}
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleLanguage}
-              className="text-sm font-medium text-gray-700 hover:text-pink-600"
+              className="hidden sm:flex"
             >
-              {language === 'en' ? 'বাং' : 'ENG'}
-            </Button>
-
-            {/* Search */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchOpen(!searchOpen)}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-
-            {/* Wishlist */}
-            <Button variant="ghost" size="sm" onClick={() => navigate('/wishlist')}>
-              <Heart className="h-5 w-5" />
-              <span className="sr-only">Wishlist</span>
+              <Globe className="h-4 w-4 mr-1" />
+              {language === 'en' ? 'বাং' : 'EN'}
             </Button>
 
             {/* Cart */}
-            <Button variant="ghost" size="sm" className="relative" onClick={() => navigate('/cart')}>
-              <ShoppingBag className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
-            </Button>
+            <Link to="/cart">
+              <Button variant="ghost" size="sm" className="relative">
+                <ShoppingBag className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-pink-600">
+                    {totalItems}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
 
-            {/* Account */}
+            {/* User Actions */}
             {user ? (
-              <div className="relative group">
-                <Button variant="ghost" size="sm">
-                  <User className="h-5 w-5" />
+              <div className="flex items-center space-x-2">
+                <span className="hidden sm:block text-sm text-gray-700">
+                  {user.name || user.email}
+                </span>
+                {user.is_admin && (
+                  <Link to="/admin">
+                    <Button variant="ghost" size="sm">
+                      <Package className="h-4 w-4 mr-1" />
+                      {content[language].admin}
+                    </Button>
+                  </Link>
+                )}
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:block">{content[language].logout}</span>
                 </Button>
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <div className="p-3 border-b border-gray-100">
-                    <p className="font-medium text-sm">{user.name || user.email}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                  </div>
-                  <div className="py-2">
-                    <button
-                      onClick={() => navigate('/account')}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-                    >
-                      {language === 'en' ? 'My Account' : 'আমার অ্যাকাউন্ট'}
-                    </button>
-                    <button
-                      onClick={() => navigate('/orders')}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-                    >
-                      {language === 'en' ? 'My Orders' : 'আমার অর্ডার'}
-                    </button>
-                    {user.isAdmin && (
-                      <button
-                        onClick={() => navigate('/admin')}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 text-purple-600"
-                      >
-                        {language === 'en' ? 'Admin Dashboard' : 'অ্যাডমিন ড্যাশবোর্ড'}
-                      </button>
-                    )}
-                    <hr className="my-2" />
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 text-red-600 flex items-center"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      {language === 'en' ? 'Logout' : 'লগআউট'}
-                    </button>
-                  </div>
-                </div>
               </div>
             ) : (
-              <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
-                <User className="h-5 w-5" />
-              </Button>
+              <Link to="/auth">
+                <Button variant="ghost" size="sm">
+                  <User className="h-4 w-4 mr-1" />
+                  {content[language].login}
+                </Button>
+              </Link>
             )}
+
+            {/* Mobile Menu Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
 
-        {/* Search bar */}
-        {searchOpen && (
-          <div className="border-t border-pink-100 py-4">
-            <form onSubmit={handleSearch} className="max-w-md mx-auto">
-              <Input
-                type="search"
-                placeholder={language === 'en' ? 'Search products...' : 'পণ্য খুঁজুন...'}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-                autoFocus
-              />
-            </form>
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 py-4">
+            <div className="flex flex-col space-y-4">
+              <Link
+                to="/"
+                className="text-gray-700 hover:text-pink-600"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {content[language].home}
+              </Link>
+              <Link
+                to="/shop"
+                className="text-gray-700 hover:text-pink-600"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {content[language].shop}
+              </Link>
+              {user && (
+                <Link
+                  to="/orders"
+                  className="text-gray-700 hover:text-pink-600"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {content[language].orders}
+                </Link>
+              )}
+              <Button
+                variant="ghost"
+                onClick={toggleLanguage}
+                className="justify-start px-0"
+              >
+                <Globe className="h-4 w-4 mr-2" />
+                {language === 'en' ? 'বাংলা' : 'English'}
+              </Button>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed top-0 left-0 bottom-0 w-80 bg-white shadow-xl">
-            <div className="flex items-center justify-between p-4 border-b border-pink-100">
-              <h2 className="text-lg font-serif font-bold text-pink-600">Shajogouri</h2>
-              <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
-                <X className="h-6 w-6" />
-              </Button>
-            </div>
-            <nav className="px-4 py-6 space-y-4">
-              {navigation[language].map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavigation(item.href)}
-                  className="flex w-full text-left text-gray-700 hover:text-pink-600 transition-colors duration-200 py-2"
-                >
-                  <span>{item.name}</span>
-                </button>
-              ))}
-              {!user && (
-                <button
-                  onClick={() => handleNavigation('/auth')}
-                  className="flex w-full text-left text-gray-700 hover:text-pink-600 transition-colors duration-200 py-2"
-                >
-                  {language === 'en' ? 'Login / Register' : 'লগইন / রেজিস্টার'}
-                </button>
-              )}
-            </nav>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
