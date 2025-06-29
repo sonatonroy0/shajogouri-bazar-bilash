@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,7 +37,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
 
   // Redirect if not admin
   React.useEffect(() => {
-    if (!user?.isAdmin) {
+    if (!user?.is_admin) {
       navigate('/');
     }
   }, [user, navigate]);
@@ -105,7 +106,7 @@ const Admin: React.FC<AdminProps> = ({ language, toggleLanguage }) => {
     });
   };
 
-  if (!user?.isAdmin) {
+  if (!user?.is_admin) {
     return null;
   }
 

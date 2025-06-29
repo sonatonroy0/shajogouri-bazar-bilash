@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   LayoutDashboard, Package, ShoppingCart, Users, Settings, 
@@ -14,7 +15,7 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange, language }) => {
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const content = {
@@ -53,7 +54,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange, lan
   ];
 
   const handleLogout = () => {
-    signOut();
+    logout();
     navigate('/');
   };
 
